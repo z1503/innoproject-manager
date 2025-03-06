@@ -1,8 +1,8 @@
 <?php
     class Database{
         private $hostname = 'localhost';
-        private $username = 'root';
-        private $password = "4619316259!";
+        private $username = '';#Имя пользователя бд
+        private $password = "";#Пароль бд
         private $database = "project";
         private $connection;
 
