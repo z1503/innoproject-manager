@@ -19,13 +19,13 @@ if (isset($_SESSION['user'])) {
                     <div class="form-group d-flex justify-content-around">                    
                         <div class="form-check">                        
                             <input class="form-check-input btn" type="radio" name="task_status" id="task_status_1" value="1" checked>
-                            <label class="form-check-label" for="task_status_1">
+                            <label class="form-check-label" for="task_status_1"style="color: black;">
                                 К выполнению
                             </label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input btn" type="radio" name="task_status" id="task_status_2" value="2">
-                            <label class="form-check-label" for="task_status_2">
+                            <label class="form-check-label" for="task_status_2"style="color: black;">
                                 В процессе
                             </label>
                         </div>
