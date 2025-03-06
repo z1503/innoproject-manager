@@ -31,7 +31,7 @@ if (isset($_SESSION['user'])) {
                         </div>
                         <div class="form-check" >
                             <input class="form-check-input btn" type="radio" name="task_status" id="task_status_3" value="3">
-                            <label class="form-check-label" for="task_status_3">
+                            <label class="form-check-label" for="task_status_3" style="color: black;">
                                 Завершено
                             </label>
                         </div>
