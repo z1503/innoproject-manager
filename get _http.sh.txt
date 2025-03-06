@@ -1,0 +1,66 @@
+#!/bin/bash
+
+
+
+# Установка переменных
+
+#Введите свой домен
+DOMAIN="project.z-zhr.ru"
+
+# Замените на свой email
+EMAIL="z@gmail.com"  
+
+
+
+# Обновление системы и установка Certbot
+
+sudo apt update
+
+sudo apt install -y certbot python3-certbot-apache
+
+
+
+# Получение SSL-сертификата
+
+sudo certbot --apache -d $DOMAIN --non-interactive --agree-tos --email $EMAIL
+
+
+
+# Проверка статуса автоматического обновления
+
+sudo systemctl status certbot.timer
+
+
+
+# Создание конфигурации Apache для SSL
+
+cat << EOF | sudo tee /etc/apache2/sites-available/$DOMAIN-ssl.conf
+
+<VirtualHost *:443>
+
+   ServerName $DOMAIN
+
+   DocumentRoot /var/www/$DOMAIN
+
+   SSLEngine on
+
+   SSLCertificateFile /etc/letsencrypt/live/$DOMAIN/fullchain.pem
+
+   SSLCertificateKeyFile /etc/letsencrypt/live/$DOMAIN/privkey.pem
+
+</VirtualHost>
+
+EOF
+
+
+
+# Активация конфигурации и перезапуск Apache
+
+sudo a2ensite $DOMAIN-ssl.conf
+
+sudo systemctl restart apache2
+
+
+
+echo "SSL-сертификат установлен и настроен для $DOMAIN"
+

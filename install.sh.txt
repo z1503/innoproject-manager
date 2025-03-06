@@ -1,0 +1,145 @@
+#!/bin/bash
+
+
+
+# Настройки пользователя
+
+#Ввести имя пользователя БД
+DB_USER=""
+
+#Ввести пароль пользователя БД
+DB_PASSWORD=""
+
+DB_NAME="project"
+
+GIT_REPO="https://github.com/z1503/innoproject-manager.git"
+
+PROJECT_DIR="/var/www/html/project"
+
+APACHE_CONF="/etc/apache2/sites-available/project.conf"
+
+#Ввести домен(project.z-zhr.ru)
+DOMAIN=""
+
+
+
+echo "🚀 Начинаем установку..."
+
+
+
+# 1. Обновление системы и установка зависимостей
+
+echo "🔄 Обновление пакетов..."
+
+sudo apt update && sudo apt upgrade -y
+
+sudo apt install -y apache2 php php-mysql unzip git mysql-server
+
+
+
+# 2. Клонирование репозитория
+
+echo "📥 Клонируем репозиторий..."
+
+if [ -d "$PROJECT_DIR" ]; then
+
+  sudo rm -rf "$PROJECT_DIR"
+
+fi
+
+sudo git clone "$GIT_REPO" "$PROJECT_DIR"
+
+
+
+# 3. Настройка базы данных
+
+echo "🛠 Настройка MySQL..."
+
+sudo mysql -u root -e "DROP DATABASE IF EXISTS $DB_NAME;"
+
+sudo mysql -u root -e "CREATE DATABASE $DB_NAME;"
+
+sudo mysql -u root -e "CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASSWORD';"
+
+sudo mysql -u root -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost';"
+
+sudo mysql -u root -e "FLUSH PRIVILEGES;"
+
+
+
+# Импорт файла kanban.sql
+
+echo "📥 Импорт базы данных..."
+
+sudo mysql -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < "$PROJECT_DIR/db/kanban.sql"
+
+
+
+# 4. Настройка конфигурации PHP (файл функций)
+
+echo "⚙️ Настройка конфигурации PHP..."
+
+CONFIG_FILE="$PROJECT_DIR/db/functions.php"
+
+sudo sed -i "s/\$host = .*/\$host = \"localhost\";/" "$CONFIG_FILE"
+
+sudo sed -i "s/\$user = .*/\$user = \"$DB_USER\";/" "$CONFIG_FILE"
+
+sudo sed -i "s/\$password = .*/\$password = \"$DB_PASSWORD\";/" "$CONFIG_FILE"
+
+sudo sed -i "s/\$database = .*/\$database = \"$DB_NAME\";/" "$CONFIG_FILE"
+
+
+
+# 5. Настройка прав доступа
+
+echo "🔑 Настройка прав доступа..."
+
+sudo chown -R www-data:www-data "$PROJECT_DIR"
+
+sudo chmod -R 755 "$PROJECT_DIR"
+
+
+
+# 6. Настройка Apache
+
+echo "🌐 Настройка Apache..."
+
+echo "<VirtualHost *:80>
+
+  ServerName $DOMAIN
+
+  DocumentRoot $PROJECT_DIR
+
+
+
+  <Directory $PROJECT_DIR>
+
+      AllowOverride All
+
+      Require all granted
+
+  </Directory>
+
+
+
+  ErrorLog \${APACHE_LOG_DIR}/project_error.log
+
+  CustomLog \${APACHE_LOG_DIR}/project_access.log combined
+
+</VirtualHost>" | sudo tee "$APACHE_CONF"
+
+
+
+# 7. Активация сайта и перезапуск Apache
+
+echo "🔄 Перезапуск Apache..."
+
+sudo a2ensite project
+
+sudo systemctl restart apache2
+
+
+
+echo "✅ Развёртывание завершено! Доступен по адресу: http://$DOMAIN"
+
